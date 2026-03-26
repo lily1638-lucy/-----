@@ -1,35 +1,108 @@
 {% extends "base.html" %}
 
-{% block title %}注册{% endblock %}
+{% block title %}注册 - 教学管理系统{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 400px; margin: 0 auto;">
-    <h2>用户注册</h2>
+<div class="card">
+    <div class="text-center" style="margin-bottom: 2rem;">
+        <div style="width: 90px; height: 90px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+            <i class="fas fa-user-plus" style="font-size: 2.8rem; color: white;"></i>
+        </div>
+        <h2 style="margin-bottom: 0.5rem;">创建新账号</h2>
+        <p style="color: #718096;">请使用学校分配的身份信息注册</p>
+    </div>
+    
     {% if error %}
-        <div class="error">{{ error }}</div>
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
     {% endif %}
+    
     <form method="POST">
-        <div style="margin-bottom: 15px;">
-            <label>用户名</label><br>
-            <input type="text" name="username" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>密码</label><br>
-            <input type="password" name="password" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>真实姓名</label><br>
-            <input type="text" name="real_name" required style="width: 100%;">
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>角色</label><br>
-            <select name="role" style="width: 100%; padding: 8px;">
-                <option value="student">学生</option>
-                <option value="teacher">教师</option>
+        <div class="form-group">
+            <label>
+                <i class="fas fa-user-tag"></i> 注册身份
+            </label>
+            <select name="role" id="role" class="form-control" onchange="updatePlaceholder()" required>
+                <option value="student">🎓 学生</option>
+                <option value="teacher">📚 教师</option>
+                <option value="admin">⚙️ 管理员</option>
             </select>
         </div>
-        <button type="submit">注册</button>
+        
+        <div class="form-group">
+            <label id="identifierLabel">
+                <i class="fas fa-id-card"></i> 学号
+            </label>
+            <input type="text" name="identifier" id="identifier" class="form-control" placeholder="请输入学号" required>
+            <small style="color: #718096;">请使用学校分配的学号/工号/管理员编号</small>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <i class="fas fa-id-card"></i> 真实姓名
+            </label>
+            <input type="text" name="real_name" class="form-control" placeholder="请输入真实姓名" required>
+            <small style="color: #718096;">请与学校系统中的姓名一致</small>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <i class="fas fa-user"></i> 用户名
+            </label>
+            <input type="text" name="username" class="form-control" placeholder="登录用用户名" required>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <i class="fas fa-lock"></i> 密码
+            </label>
+            <input type="password" name="password" class="form-control" placeholder="至少6个字符" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i> 立即注册
+        </button>
     </form>
-    <p style="margin-top: 15px;">已有账号？<a href="/auth/login">立即登录</a></p>
+    
+    <div style="margin-top: 2rem; text-align: center;">
+        <p style="color: #718096;">
+            已有账号？ 
+            <a href="/auth/login" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-sign-in-alt"></i> 返回登录
+            </a>
+        </p>
+    </div>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background: #f7fafc; border-radius: 20px;">
+        <p style="font-size: 0.85rem; color: #718096; text-align: center; margin: 0;">
+            <i class="fas fa-info-circle"></i> 测试身份信息<br>
+            <strong>学生：</strong> 202401001 (王小明)<br>
+            <strong>教师：</strong> T001 (张建国)<br>
+            <strong>管理员：</strong> A001 (系统管理员)
+        </p>
+    </div>
 </div>
+
+<script>
+    function updatePlaceholder() {
+        const role = document.getElementById('role').value;
+        const identifierInput = document.getElementById('identifier');
+        const identifierLabel = document.getElementById('identifierLabel');
+        
+        if (role === 'student') {
+            identifierLabel.innerHTML = '<i class="fas fa-id-card"></i> 学号';
+            identifierInput.placeholder = '请输入学号 (如: 202401001)';
+        } else if (role === 'teacher') {
+            identifierLabel.innerHTML = '<i class="fas fa-id-card"></i> 工号';
+            identifierInput.placeholder = '请输入工号 (如: T2024001)';
+        } else {
+            identifierLabel.innerHTML = '<i class="fas fa-id-card"></i> 管理员编号';
+            identifierInput.placeholder = '请输入管理员编号 (如: A001)';
+        }
+    }
+    
+    // 初始化
+    updatePlaceholder();
+</script>
 {% endblock %}
