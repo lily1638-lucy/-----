@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教学管理系统 - 管理员后台</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        /* 侧边栏 */
+        .sidebar {
+            width: 200px;
+            background-color: #2e3b4e;
+            color: #fff;
+            padding-top: 20px;
+        }
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .sidebar ul {
+            list-style: none;
+        }
+        .sidebar ul li {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .sidebar ul li:hover, .sidebar ul li.active {
+            background-color: #405275;
+        }
+        .sidebar ul li i {
+            margin-right: 10px;
+        }
+        /* 主内容区 */
+        .main {
+            flex: 1;
+            padding: 20px;
+        }
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e6e6e6;
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn-primary {
+            background-color: #409eff;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background-color: #337ecc;
+        }
+        .btn-danger {
+            background-color: #f56c6c;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background-color: #dd6161;
+        }
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+        }
+        table th, table td {
+            padding: 12px 15px;
+            text-align: left;
+            border: 1px solid #ebeef5;
+        }
+        table th {
+            background-color: #f5f7fa;
+            font-weight: bold;
+        }
+        table tr:hover {
+            background-color: #f5f7fa;
+        }
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            width: 550px;
+        }
+        .modal-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h2>教学管理系统</h2>
+            <ul>
+                <li class="active" onclick="showPage('course')"><i class="fas fa-book"></i> 课程管理</li>
+                <li onclick="showPage('student')"><i class="fas fa-user-graduate"></i> 学生管理</li>
+                <li onclick="showPage('teacher')"><i class="fas fa-chalkboard-teacher"></i> 教师管理</li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main">
+            <!-- 课程管理页面 -->
+            <div id="course-page" class="page">
+                <div class="page-title">课程管理</div>
+                <div class="toolbar">
+                    <input type="text" class="search-box" placeholder="搜索课程名称" id="course-search">
+                    <button class="btn btn-primary" onclick="searchCourse()"><i class="fas fa-search"></i> 搜索</button>
+                    <button class="btn btn-primary" onclick="openCourseModal()"><i class="fas fa-plus"></i> 新增课程</button>
+                </div>
+                <table id="course-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>课程编码</th>
+                            <th>课程名称</th>
+                            <th>学分</th>
+                            <th>总学时</th>
+                            <th>教师ID</th>
+                            <th>学期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 学生管理页面 -->
+            <div id="student-page" class="page" style="display: none;">
+                <div class="page-title">学生管理</div>
+                <div class="toolbar">
+                    <input type="text" class="search-box" placeholder="搜索学生姓名" id="student-search">
+                    <button class="btn btn-primary" onclick="searchStudent()"><i class="fas fa-search"></i> 搜索</button>
+                    <button class="btn btn-primary" onclick="openStudentModal()"><i class="fas fa-plus"></i> 新增学生</button>
+                </div>
+                <table id="student-table">
+                    <thead>
+                        <tr>
+                            <th>学号</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>专业</th>
+                            <th>班级</th>
+                            <th>年级</th>
+                            <th>电话</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- 教师管理页面 -->
+            <div id="teacher-page" class="page" style="display: none;">
+                <div class="page-title">教师管理</div>
+                <div class="toolbar">
+                    <input type="text" class="search-box" placeholder="搜索教师姓名" id="teacher-search">
+                    <button class="btn btn-primary" onclick="searchTeacher()"><i class="fas fa-search"></i> 搜索</button>
+                    <button class="btn btn-primary" onclick="openTeacherModal()"><i class="fas fa-plus"></i> 新增教师</button>
+                </div>
+                <table id="teacher-table">
+                    <thead>
+                        <tr>
+                            <th>教师ID</th>
+                            <th>姓名</th>
+                            <th>性别</th>
+                            <th>职称</th>
+                            <th>部门</th>
+                            <th>电话</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 课程弹窗 -->
+    <div class="modal" id="course-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="course-modal-title">新增课程</div>
+            <form id="course-form">
+                <input type="hidden" id="course-id">
+                <div class="form-group">
+                    <label>课程编码</label>
+                    <input type="text" id="course-code" required>
+                </div>
+                <div class="form-group">
+                    <label>课程名称</label>
+                    <input type="text" id="course-name" required>
+                </div>
+                <div class="form-group">
+                    <label>英文名称</label>
+                    <input type="text" id="course-english-name">
+                </div>
+                <div class="form-group">
+                    <label>学分</label>
+                    <input type="number" step="0.5" id="course-credit" required>
+                </div>
+                <div class="form-group">
+                    <label>总学时</label>
+                    <input type="number" id="course-total-hours" required>
+                </div>
+                <div class="form-group">
+                    <label>教师ID</label>
+                    <input type="text" id="course-teacher-id">
+                </div>
+                <div class="form-group">
+                    <label>学期</label>
+                    <input type="text" id="course-semester" required>
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="course-status">
+                        <option value="open">开放</option>
+                        <option value="closed">关闭</option>
+                        <option value="full">已满</option>
+                    </select>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('course')">取消</button>
+                <button class="btn btn-primary" onclick="saveCourse()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 学生弹窗 -->
+    <div class="modal" id="student-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="student-modal-title">新增学生</div>
+            <form id="student-form">
+                <input type="hidden" id="student-id">
+                <div class="form-group">
+                    <label>学号</label>
+                    <input type="text" id="student-student-id" required>
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="student-name" required>
+                </div>
+                <div class="form-group">
+                    <label>性别</label>
+                    <select id="student-gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>专业</label>
+                    <input type="text" id="student-major" required>
+                </div>
+                <div class="form-group">
+                    <label>班级</label>
+                    <input type="text" id="student-class-name">
+                </div>
+                <div class="form-group">
+                    <label>年级</label>
+                    <input type="number" id="student-grade" required>
+                </div>
+                <div class="form-group">
+                    <label>电话</label>
+                    <input type="text" id="student-phone">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="student-status">
+                        <option value="active">正常</option>
+                        <option value="inactive">休学</option>
+                        <option value="graduated">毕业</option>
+                    </select>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('student')">取消</button>
+                <button class="btn btn-primary" onclick="saveStudent()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 教师弹窗 -->
+    <div class="modal" id="teacher-modal">
+        <div class="modal-content">
+            <div class="modal-title" id="teacher-modal-title">新增教师</div>
+            <form id="teacher-form">
+                <input type="hidden" id="teacher-id">
+                <div class="form-group">
+                    <label>教师ID</label>
+                    <input type="text" id="teacher-teacher-id" required>
+                </div>
+                <div class="form-group">
+                    <label>姓名</label>
+                    <input type="text" id="teacher-name" required>
+                </div>
+                <div class="form-group">
+                    <label>性别</label>
+                    <select id="teacher-gender">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>职称</label>
+                    <input type="text" id="teacher-title">
+                </div>
+                <div class="form-group">
+                    <label>部门</label>
+                    <input type="text" id="teacher-department" required>
+                </div>
+                <div class="form-group">
+                    <label>电话</label>
+                    <input type="text" id="teacher-phone">
+                </div>
+                <div class="form-group">
+                    <label>状态</label>
+                    <select id="teacher-status">
+                        <option value="active">在职</option>
+                        <option value="inactive">离职</option>
+                        <option value="retired">退休</option>
+                    </select>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('teacher')">取消</button>
+                <button class="btn btn-primary" onclick="saveTeacher()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = '/admin';
+
+        // 页面切换
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            document.getElementById(`${page}-page`).style.display = 'block';
+            event.target.closest('li').classList.add('active');
+            if (page === 'course') loadCourses();
+            if (page === 'student') loadStudents();
+            if (page === 'teacher') loadTeachers();
+        }
+
+        // 加载课程列表
+        async function loadCourses(search = '') {
+            const url = search ? `${BASE_URL}/courses/search?name=${search}` : `${BASE_URL}/courses`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const tbody = document.querySelector('#course-table tbody');
+            tbody.innerHTML = '';
+            data.forEach(course => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${course.id}</td>
+                        <td>${course.courseCode}</td>
+                        <td>${course.courseName}</td>
+                        <td>${course.credit}</td>
+                        <td>${course.totalHours}</td>
+                        <td>${course.teacherId}</td>
+                        <td>${course.semester}</td>
+                        <td>${course.status}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="editCourse(${course.id})">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteCourse(${course.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 加载学生列表
+        async function loadStudents(search = '') {
+            const url = search ? `${BASE_URL}/students/search?name=${search}` : `${BASE_URL}/students`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const tbody = document.querySelector('#student-table tbody');
+            tbody.innerHTML = '';
+            data.forEach(student => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${student.studentId}</td>
+                        <td>${student.name}</td>
+                        <td>${student.gender}</td>
+                        <td>${student.major}</td>
+                        <td>${student.className}</td>
+                        <td>${student.grade}</td>
+                        <td>${student.phone}</td>
+                        <td>${student.status}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="editStudent('${student.studentId}')">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteStudent('${student.studentId}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 加载教师列表
+        async function loadTeachers(search = '') {
+            const url = search ? `${BASE_URL}/teachers/search?name=${search}` : `${BASE_URL}/teachers`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const tbody = document.querySelector('#teacher-table tbody');
+            tbody.innerHTML = '';
+            data.forEach(teacher => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${teacher.teacherId}</td>
+                        <td>${teacher.name}</td>
+                        <td>${teacher.gender}</td>
+                        <td>${teacher.title}</td>
+                        <td>${teacher.department}</td>
+                        <td>${teacher.phone}</td>
+                        <td>${teacher.status}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="editTeacher('${teacher.teacherId}')">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteTeacher('${teacher.teacherId}')">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 打开弹窗
+        function openCourseModal(id = null) {
+            document.getElementById('course-modal').style.display = 'flex';
+            if (id) {
+                document.getElementById('course-modal-title').textContent = '编辑课程';
+                fetch(`${BASE_URL}/courses/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('course-id').value = data.id;
+                        document.getElementById('course-code').value = data.courseCode;
+                        document.getElementById('course-name').value = data.courseName;
+                        document.getElementById('course-english-name').value = data.englishName;
+                        document.getElementById('course-credit').value = data.credit;
+                        document.getElementById('course-total-hours').value = data.totalHours;
+                        document.getElementById('course-teacher-id').value = data.teacherId;
+                        document.getElementById('course-semester').value = data.semester;
+                        document.getElementById('course-status').value = data.status;
+                    });
+            } else {
+                document.getElementById('course-modal-title').textContent = '新增课程';
+                document.getElementById('course-form').reset();
+                document.getElementById('course-id').value = '';
+            }
+        }
+        function openStudentModal(id = null) {
+            document.getElementById('student-modal').style.display = 'flex';
+            if (id) {
+                document.getElementById('student-modal-title').textContent = '编辑学生';
+                fetch(`${BASE_URL}/students/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('student-id').value = data.studentId;
+                        document.getElementById('student-student-id').value = data.studentId;
+                        document.getElementById('student-name').value = data.name;
+                        document.getElementById('student-gender').value = data.gender;
+                        document.getElementById('student-major').value = data.major;
+                        document.getElementById('student-class-name').value = data.className;
+                        document.getElementById('student-grade').value = data.grade;
+                        document.getElementById('student-phone').value = data.phone;
+                        document.getElementById('student-status').value = data.status;
+                    });
+            } else {
+                document.getElementById('student-modal-title').textContent = '新增学生';
+                document.getElementById('student-form').reset();
+                document.getElementById('student-id').value = '';
+            }
+        }
+        function openTeacherModal(id = null) {
+            document.getElementById('teacher-modal').style.display = 'flex';
+            if (id) {
+                document.getElementById('teacher-modal-title').textContent = '编辑教师';
+                fetch(`${BASE_URL}/teachers/${id}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        document.getElementById('teacher-id').value = data.teacherId;
+                        document.getElementById('teacher-teacher-id').value = data.teacherId;
+                        document.getElementById('teacher-name').value = data.name;
+                        document.getElementById('teacher-gender').value = data.gender;
+                        document.getElementById('teacher-title').value = data.title;
+                        document.getElementById('teacher-department').value = data.department;
+                        document.getElementById('teacher-phone').value = data.phone;
+                        document.getElementById('teacher-status').value = data.status;
+                    });
+            } else {
+                document.getElementById('teacher-modal-title').textContent = '新增教师';
+                document.getElementById('teacher-form').reset();
+                document.getElementById('teacher-id').value = '';
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal(type) {
+            document.getElementById(`${type}-modal`).style.display = 'none';
+        }
+
+        // 保存课程
+        async function saveCourse() {
+            const id = document.getElementById('course-id').value;
+            const data = {
+                courseCode: document.getElementById('course-code').value,
+                courseName: document.getElementById('course-name').value,
+                englishName: document.getElementById('course-english-name').value,
+                credit: parseFloat(document.getElementById('course-credit').value),
+                totalHours: parseInt(document.getElementById('course-total-hours').value),
+                teacherId: document.getElementById('course-teacher-id').value,
+                semester: document.getElementById('course-semester').value,
+                status: document.getElementById('course-status').value
+            };
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${BASE_URL}/courses/${id}` : `${BASE_URL}/courses`;
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            closeModal('course');
+            loadCourses();
+        }
+
+        // 保存学生
+        async function saveStudent() {
+            const id = document.getElementById('student-id').value;
+            const data = {
+                studentId: document.getElementById('student-student-id').value,
+                name: document.getElementById('student-name').value,
+                gender: document.getElementById('student-gender').value,
+                major: document.getElementById('student-major').value,
+                className: document.getElementById('student-class-name').value,
+                grade: parseInt(document.getElementById('student-grade').value),
+                phone: document.getElementById('student-phone').value,
+                status: document.getElementById('student-status').value
+            };
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${BASE_URL}/students/${id}` : `${BASE_URL}/students`;
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            closeModal('student');
+            loadStudents();
+        }
+
+        // 保存教师
+        async function saveTeacher() {
+            const id = document.getElementById('teacher-id').value;
+            const data = {
+                teacherId: document.getElementById('teacher-teacher-id').value,
+                name: document.getElementById('teacher-name').value,
+                gender: document.getElementById('teacher-gender').value,
+                title: document.getElementById('teacher-title').value,
+                department: document.getElementById('teacher-department').value,
+                phone: document.getElementById('teacher-phone').value,
+                status: document.getElementById('teacher-status').value
+            };
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${BASE_URL}/teachers/${id}` : `${BASE_URL}/teachers`;
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            closeModal('teacher');
+            loadTeachers();
+        }
+
+        // 删除操作
+        async function deleteCourse(id) {
+            if (confirm('确定删除该课程？')) {
+                await fetch(`${BASE_URL}/courses/${id}`, { method: 'DELETE' });
+                loadCourses();
+            }
+        }
+        async function deleteStudent(id) {
+            if (confirm('确定删除该学生？')) {
+                await fetch(`${BASE_URL}/students/${id}`, { method: 'DELETE' });
+                loadStudents();
+            }
+        }
+        async function deleteTeacher(id) {
+            if (confirm('确定删除该教师？')) {
+                await fetch(`${BASE_URL}/teachers/${id}`, { method: 'DELETE' });
+                loadTeachers();
+            }
+        }
+
+        // 搜索
+        function searchCourse() {
+            const search = document.getElementById('course-search').value;
+            loadCourses(search);
+        }
+        function searchStudent() {
+            const search = document.getElementById('student-search').value;
+            loadStudents(search);
+        }
+        function searchTeacher() {
+            const search = document.getElementById('teacher-search').value;
+            loadTeachers(search);
+        }
+
+        // 编辑快捷方法
+        function editCourse(id) { openCourseModal(id); }
+        function editStudent(id) { openStudentModal(id); }
+        function editTeacher(id) { openTeacherModal(id); }
+
+        // 初始加载课程页面
+        window.onload = () => loadCourses();
+    </script>
+</body>
+</html>
